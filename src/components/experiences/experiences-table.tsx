@@ -1,13 +1,6 @@
 import Link from "next/link";
-import { MoreHorizontalIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyContent,
@@ -25,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import type { experiences } from "@/lib/db/schema";
 import { getExperienceDisplayName } from "@/lib/experiences/display";
+import { ExperienceRowActions } from "./experience-row-actions";
 
 type Experience = typeof experiences.$inferSelect;
 
@@ -72,44 +66,38 @@ export function ExperiencesTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {experiences.map((experience) => (
-          <TableRow key={experience.id}>
-            <TableCell className="font-medium">
-              {getExperienceDisplayName(experience.data, experience.slug)}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {experience.template}
-            </TableCell>
-            <TableCell>
-              <Badge variant={statusBadgeVariant[experience.status] ?? "outline"}>
-                {experience.status}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {updatedAtFormatter.format(experience.updatedAt)}
-            </TableCell>
-            <TableCell className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontalIcon />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href={`/e/${experience.slug}`}>View</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/dashboard/experiences/${experience.id}`}>
-                      Edit
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        ))}
+        {experiences.map((experience) => {
+          const displayName = getExperienceDisplayName(
+            experience.data,
+            experience.slug,
+          );
+
+          return (
+            <TableRow key={experience.id}>
+              <TableCell className="font-medium">{displayName}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {experience.template}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={statusBadgeVariant[experience.status] ?? "outline"}
+                >
+                  {experience.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {updatedAtFormatter.format(experience.updatedAt)}
+              </TableCell>
+              <TableCell className="text-right">
+                <ExperienceRowActions
+                  experienceId={experience.id}
+                  slug={experience.slug}
+                  name={displayName}
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

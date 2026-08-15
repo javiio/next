@@ -17,3 +17,12 @@ export function getTemplate(templateId: string): Template | undefined {
 
   return namespaces[namespace]?.[templateName];
 }
+
+// Namespaced ids for every registered template, e.g. ["creator/proposal-v1"].
+// Lets UI like the template picker stay driven by the registry instead of
+// hardcoding ids.
+export function listTemplateIds(): string[] {
+  return Object.entries(namespaces).flatMap(([namespace, templates]) =>
+    Object.keys(templates).map((templateId) => `${namespace}/${templateId}`),
+  );
+}
