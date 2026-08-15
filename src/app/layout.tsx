@@ -26,7 +26,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, geistHeading.variable)}
+      // Dark is the default theme (the app has no light/dark toggle yet).
+      // This lives on `<html>` rather than a wrapper div so that portaled
+      // content (dialogs, dropdowns, the mobile sidebar sheet, etc.), which
+      // Radix renders at the end of `<body>`, also picks up the dark theme
+      // tokens instead of falling back to the light `:root` values.
+      className={cn("dark", "h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, geistHeading.variable)}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
