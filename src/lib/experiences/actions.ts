@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { experiences } from "@/lib/db/schema";
-import { getCurrentOrganization } from "@/lib/organizations/queries";
+import { getOrganizationForCurrentUser } from "@/lib/organizations/queries";
 import { getTemplate } from "@/templates";
 import { getExperienceNameForSlug } from "./display";
 import { getExperienceByIdForOrganization } from "./queries";
@@ -28,10 +28,23 @@ function extractTemplateData(formData: FormData) {
   );
 }
 
+// `organizationSlug` is supplied via `.bind()` at the call site (see
+// `ExperienceForm`, which reads it from the URL with `useParams()` rather
+// than a prop) instead of a `formData` field. Either way it's just a
+// UX convenience for building the right redirect URL — it's never trusted
+// on its own: every action re-resolves it through
+// `getOrganizationForCurrentUser`, which re-checks the signed-in user's
+// membership, before touching any data.
 export async function createExperience(
+  organizationSlug: string,
   _prevState: ExperienceFormState,
   formData: FormData,
 ): Promise<ExperienceFormState> {
+  const organization = await getOrganizationForCurrentUser(organizationSlug);
+  if (!organization) {
+    return { status: "error", message: "Organization not found." };
+  }
+
   const templateId = formData.get("templateId");
 
   if (typeof templateId !== "string" || templateId.trim().length === 0) {
@@ -57,9 +70,10 @@ export async function createExperience(
     };
   }
 
-  const organization = await getCurrentOrganization();
-
-  const slug = await generateUniqueSlug(getExperienceNameForSlug(parsed.data));
+  const slug = await generateUniqueSlug(
+    organization.id,
+    getExperienceNameForSlug(parsed.data),
+  );
 
   let experienceId: string;
   try {
@@ -82,19 +96,23 @@ export async function createExperience(
     };
   }
 
-  redirect(`/dashboard/experiences/${experienceId}`);
+  redirect(`/${organization.slug}/experiences/${experienceId}`);
 }
 
 export async function updateExperience(
+  organizationSlug: string,
   _prevState: ExperienceFormState,
   formData: FormData,
 ): Promise<ExperienceFormState> {
+  const organization = await getOrganizationForCurrentUser(organizationSlug);
+  if (!organization) {
+    return { status: "error", message: "Organization not found." };
+  }
+
   const experienceId = formData.get("experienceId");
   if (typeof experienceId !== "string" || experienceId.trim().length === 0) {
     return { status: "error", message: "Missing experience id." };
   }
-
-  const organization = await getCurrentOrganization();
 
   const existing = await getExperienceByIdForOrganization(
     experienceId,
@@ -132,7 +150,9 @@ export async function updateExperience(
   const slug =
     nextName === previousName
       ? existing.slug
-      : await generateUniqueSlug(nextName, { excludeId: existing.id });
+      : await generateUniqueSlug(organization.id, nextName, {
+          excludeId: existing.id,
+        });
 
   try {
     await db
@@ -146,8 +166,8 @@ export async function updateExperience(
     };
   }
 
-  revalidatePath("/dashboard/experiences");
-  redirect(`/dashboard/experiences/${existing.id}`);
+  revalidatePath(`/${organization.slug}/experiences`);
+  redirect(`/${organization.slug}/experiences/${existing.id}`);
 }
 
 export type DeleteExperienceResult = {
@@ -156,9 +176,13 @@ export type DeleteExperienceResult = {
 };
 
 export async function deleteExperience(
+  organizationSlug: string,
   experienceId: string,
 ): Promise<DeleteExperienceResult> {
-  const organization = await getCurrentOrganization();
+  const organization = await getOrganizationForCurrentUser(organizationSlug);
+  if (!organization) {
+    return { status: "error", message: "Organization not found." };
+  }
 
   // Scoping this lookup to the organization is what prevents deleting an
   // Experience that belongs to someone else just by guessing/knowing its id.
@@ -179,6 +203,6 @@ export async function deleteExperience(
     };
   }
 
-  revalidatePath("/dashboard/experiences");
+  revalidatePath(`/${organization.slug}/experiences`);
   return { status: "idle" };
 }

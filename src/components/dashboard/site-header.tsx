@@ -3,17 +3,21 @@
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { dashboardNavItems } from "./nav-items";
+import { getDashboardNavItems } from "./nav-items";
 
-function getPageTitle(pathname: string) {
-  const activeItem = dashboardNavItems.find(
+function getPageTitle(pathname: string, organizationSlug: string) {
+  const activeItem = getDashboardNavItems(organizationSlug).find(
     (item) => pathname === item.url || pathname.startsWith(`${item.url}/`),
   );
 
   return activeItem?.title ?? "Dashboard";
 }
 
-export function SiteHeader() {
+export function SiteHeader({
+  organizationSlug,
+}: {
+  organizationSlug: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -24,7 +28,9 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium">{getPageTitle(pathname)}</h1>
+        <h1 className="text-base font-medium">
+          {getPageTitle(pathname, organizationSlug)}
+        </h1>
       </div>
     </header>
   );

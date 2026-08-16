@@ -1,0 +1,1 @@
+ALTER TABLE "experiences" ADD CONSTRAINT "experiences_org_slug_unique" UNIQUE("organization_id","slug");

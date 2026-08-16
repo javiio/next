@@ -1,18 +1,22 @@
 import { notFound } from "next/navigation";
 import { ExperienceForm } from "@/components/experiences/experience-form";
 import { getExperienceByIdForOrganization } from "@/lib/experiences/queries";
-import { getCurrentOrganization } from "@/lib/organizations/queries";
+import { getOrganizationForCurrentUser } from "@/lib/organizations/queries";
 
 // This reads directly from Postgres (not `fetch`), so without this Next.js
 // would prerender the page once at build time instead of on every request.
 export const dynamic = "force-dynamic";
 
 export default async function EditExperiencePage(
-  props: PageProps<"/dashboard/experiences/[id]">,
+  props: PageProps<"/[organizationSlug]/experiences/[id]">,
 ) {
-  const { id } = await props.params;
+  const { organizationSlug, id } = await props.params;
 
-  const organization = await getCurrentOrganization();
+  const organization = await getOrganizationForCurrentUser(organizationSlug);
+  if (!organization) {
+    notFound();
+  }
+
   const experience = await getExperienceByIdForOrganization(
     id,
     organization.id,

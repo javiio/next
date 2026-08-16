@@ -16,15 +16,18 @@ export async function GET(request: NextRequest) {
   // Default email template routes through Supabase's /verify and lands here
   // with ?code= (PKCE). token_hash is the direct flow if we ever customize
   // the email template (requires custom SMTP on Supabase).
+  // Redirects to `/`, which resolves the signed-in user's organization and
+  // forwards into its URL-scoped routes — kept in one place rather than
+  // duplicated here.
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      redirect("/dashboard");
+      redirect("/");
     }
   } else if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash });
     if (!error) {
-      redirect("/dashboard");
+      redirect("/");
     }
   }
 

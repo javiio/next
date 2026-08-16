@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { CircleAlertIcon } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -56,12 +57,19 @@ export function ExperienceForm({
     data: unknown;
   };
 }) {
+  const { organizationSlug } = useParams<{ organizationSlug: string }>();
   const isEditing = !!experience;
   const [templateId, setTemplateId] = useState(
     experience?.template ?? templateIds[0],
   );
+  // `.bind` supplies `organizationSlug` as the action's first argument —
+  // it's never trusted as-is; both actions still re-resolve and re-check it
+  // server-side via `getOrganizationForCurrentUser`.
   const [state, formAction, isPending] = useActionState(
-    isEditing ? updateExperience : createExperience,
+    (isEditing ? updateExperience : createExperience).bind(
+      null,
+      organizationSlug,
+    ),
     initialState,
   );
 
@@ -148,7 +156,7 @@ export function ExperienceForm({
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" asChild>
-          <Link href="/dashboard/experiences">Cancel</Link>
+          <Link href={`/${organizationSlug}/experiences`}>Cancel</Link>
         </Button>
         <Button type="submit" disabled={isPending}>
           {isEditing

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { MoreHorizontalIcon } from "lucide-react";
 import {
   AlertDialog,
@@ -32,6 +33,7 @@ export function ExperienceRowActions({
   slug: string;
   name: string;
 }) {
+  const { organizationSlug } = useParams<{ organizationSlug: string }>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -39,7 +41,7 @@ export function ExperienceRowActions({
   function handleDelete() {
     setDeleteError(null);
     startDeleteTransition(async () => {
-      const result = await deleteExperience(experienceId);
+      const result = await deleteExperience(organizationSlug, experienceId);
       if (result.status === "error") {
         setDeleteError(result.message ?? "Something went wrong.");
         return;
@@ -59,10 +61,12 @@ export function ExperienceRowActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link href={`/e/${slug}`}>View</Link>
+            <Link href={`/${organizationSlug}/e/${slug}`}>View</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={`/dashboard/experiences/${experienceId}`}>Edit</Link>
+            <Link href={`/${organizationSlug}/experiences/${experienceId}`}>
+              Edit
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

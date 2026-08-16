@@ -33,8 +33,10 @@ const updatedAtFormatter = new Intl.DateTimeFormat("en-US", {
 
 export function ExperiencesTable({
   experiences,
+  organizationSlug,
 }: {
   experiences: Experience[];
+  organizationSlug: string;
 }) {
   if (experiences.length === 0) {
     return (
@@ -47,7 +49,9 @@ export function ExperiencesTable({
         </EmptyHeader>
         <EmptyContent>
           <Button asChild>
-            <Link href="/dashboard/experiences/new">New experience</Link>
+            <Link href={`/${organizationSlug}/experiences/new`}>
+              New experience
+            </Link>
           </Button>
         </EmptyContent>
       </Empty>

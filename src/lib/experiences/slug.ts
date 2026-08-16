@@ -1,4 +1,4 @@
-import { getExperienceBySlug } from "./queries";
+import { getExperienceByOrganizationIdAndSlug } from "./queries";
 
 export function slugify(value: string): string {
   const slug = value
@@ -11,12 +11,16 @@ export function slugify(value: string): string {
   return slug || "experience";
 }
 
-// There's no unique constraint on `experiences.slug` yet, so uniqueness is
-// enforced here at the application layer instead of the database.
+// Slugs only need to be unique within an organization (there's a
+// `UNIQUE (organization_id, slug)` constraint backing this at the database
+// level), so the collision check below is scoped the same way — a
+// `proposal` slug in one organization never blocks a `proposal` slug in
+// another.
 //
 // `excludeId` lets a slug regenerated while editing an experience ignore a
 // collision with that same experience's own current slug.
 export async function generateUniqueSlug(
+  organizationId: string,
   name: string,
   options?: { excludeId?: string },
 ): Promise<string> {
@@ -26,7 +30,10 @@ export async function generateUniqueSlug(
   let attempt = 2;
 
   while (true) {
-    const existing = await getExperienceBySlug(candidate);
+    const existing = await getExperienceByOrganizationIdAndSlug(
+      organizationId,
+      candidate,
+    );
     if (!existing || existing.id === options?.excludeId) {
       break;
     }

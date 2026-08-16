@@ -1,15 +1,26 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ExperiencesTable } from "@/components/experiences/experiences-table";
 import { getExperiencesByOrganization } from "@/lib/experiences/queries";
-import { getCurrentOrganization } from "@/lib/organizations/queries";
+import { getOrganizationForCurrentUser } from "@/lib/organizations/queries";
 
 // This reads directly from Postgres (not `fetch`), so without this Next.js
 // would prerender the list once at build time instead of on every request.
 export const dynamic = "force-dynamic";
 
-export default async function ExperiencesPage() {
-  const organization = await getCurrentOrganization();
+export default async function ExperiencesPage(
+  props: PageProps<"/[organizationSlug]/experiences">,
+) {
+  const { organizationSlug } = await props.params;
+
+  // Request-memoized — this repeats the same call the layout already made
+  // rather than duplicating the membership-check logic here.
+  const organization = await getOrganizationForCurrentUser(organizationSlug);
+  if (!organization) {
+    notFound();
+  }
+
   const experiences = await getExperiencesByOrganization(organization.id);
 
   return (
@@ -17,10 +28,15 @@ export default async function ExperiencesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Experiences</h1>
         <Button asChild>
-          <Link href="/dashboard/experiences/new">New experience</Link>
+          <Link href={`/${organization.slug}/experiences/new`}>
+            New experience
+          </Link>
         </Button>
       </div>
-      <ExperiencesTable experiences={experiences} />
+      <ExperiencesTable
+        experiences={experiences}
+        organizationSlug={organization.slug}
+      />
     </div>
   );
 }
