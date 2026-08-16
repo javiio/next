@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { experiences } from "@/lib/db/schema";
-import { getTemporaryOrganizationId } from "@/lib/organizations/queries";
+import { getCurrentOrganization } from "@/lib/organizations/queries";
 import { getTemplate } from "@/templates";
 import { getExperienceNameForSlug } from "./display";
 import { getExperienceByIdForOrganization } from "./queries";
@@ -57,14 +57,7 @@ export async function createExperience(
     };
   }
 
-  // TODO: replace with the organization from the authenticated user's session.
-  const organizationId = await getTemporaryOrganizationId();
-  if (!organizationId) {
-    return {
-      status: "error",
-      message: "No organization found. Create one before adding experiences.",
-    };
-  }
+  const organization = await getCurrentOrganization();
 
   const slug = await generateUniqueSlug(getExperienceNameForSlug(parsed.data));
 
@@ -73,7 +66,7 @@ export async function createExperience(
     const [experience] = await db
       .insert(experiences)
       .values({
-        organizationId,
+        organizationId: organization.id,
         template: templateId,
         slug,
         data: parsed.data,
@@ -101,15 +94,11 @@ export async function updateExperience(
     return { status: "error", message: "Missing experience id." };
   }
 
-  // TODO: replace with the organization from the authenticated user's session.
-  const organizationId = await getTemporaryOrganizationId();
-  if (!organizationId) {
-    return { status: "error", message: "No organization found." };
-  }
+  const organization = await getCurrentOrganization();
 
   const existing = await getExperienceByIdForOrganization(
     experienceId,
-    organizationId,
+    organization.id,
   );
   if (!existing) {
     return { status: "error", message: "Experience not found." };
@@ -169,17 +158,13 @@ export type DeleteExperienceResult = {
 export async function deleteExperience(
   experienceId: string,
 ): Promise<DeleteExperienceResult> {
-  // TODO: replace with the organization from the authenticated user's session.
-  const organizationId = await getTemporaryOrganizationId();
-  if (!organizationId) {
-    return { status: "error", message: "No organization found." };
-  }
+  const organization = await getCurrentOrganization();
 
   // Scoping this lookup to the organization is what prevents deleting an
   // Experience that belongs to someone else just by guessing/knowing its id.
   const existing = await getExperienceByIdForOrganization(
     experienceId,
-    organizationId,
+    organization.id,
   );
   if (!existing) {
     return { status: "error", message: "Experience not found." };

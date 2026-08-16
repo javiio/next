@@ -23,4 +23,4 @@ export const experiences = pgTable("experiences", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}).enableRLS();

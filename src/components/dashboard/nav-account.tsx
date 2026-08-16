@@ -5,9 +5,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-// Displays the current (temporary) organization at the bottom of the
-// sidebar. This is a static placeholder for the user/account area — once
-// authentication exists, this becomes the real account menu.
+// Displays the signed-in user's current organization at the bottom of the
+// sidebar. This is a static placeholder for the user/account area — an
+// account menu (sign out, switch organization, etc.) is future work.
 export function NavAccount({
   organizationName,
 }: {

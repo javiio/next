@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ExperienceForm } from "@/components/experiences/experience-form";
 import { getExperienceByIdForOrganization } from "@/lib/experiences/queries";
-import { getTemporaryOrganizationId } from "@/lib/organizations/queries";
+import { getCurrentOrganization } from "@/lib/organizations/queries";
 
 // This reads directly from Postgres (not `fetch`), so without this Next.js
 // would prerender the page once at build time instead of on every request.
@@ -12,11 +12,11 @@ export default async function EditExperiencePage(
 ) {
   const { id } = await props.params;
 
-  // TODO: replace with the organization from the authenticated user's session.
-  const organizationId = await getTemporaryOrganizationId();
-  const experience = organizationId
-    ? await getExperienceByIdForOrganization(id, organizationId)
-    : null;
+  const organization = await getCurrentOrganization();
+  const experience = await getExperienceByIdForOrganization(
+    id,
+    organization.id,
+  );
 
   if (!experience) {
     notFound();
