@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { ActivityTimeline } from "@/components/experiences/activity-timeline";
 import { ExperienceForm } from "@/components/experiences/experience-form";
+import { getExperienceEvents } from "@/lib/experience-events/queries";
 import { getExperienceByIdForOrganization } from "@/lib/experiences/queries";
 import { getOrganizationForCurrentUser } from "@/lib/organizations/queries";
 
@@ -26,16 +28,25 @@ export default async function EditExperiencePage(
     notFound();
   }
 
+  const events = await getExperienceEvents(experience.id);
+
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-8">
-      <h1 className="text-2xl font-semibold">Edit experience</h1>
-      <ExperienceForm
-        experience={{
-          id: experience.id,
-          template: experience.template,
-          data: experience.data,
-        }}
-      />
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10 p-8">
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold">Edit experience</h1>
+        <ExperienceForm
+          experience={{
+            id: experience.id,
+            template: experience.template,
+            data: experience.data,
+          }}
+        />
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Activity</h2>
+        <ActivityTimeline events={events} />
+      </div>
     </div>
   );
 }
