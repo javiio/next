@@ -1,6 +1,7 @@
 import { type AnyColumn, sql } from "drizzle-orm";
 import { pgPolicy } from "drizzle-orm/pg-core";
 import { authenticatedRole, authUid } from "drizzle-orm/supabase";
+import { experienceEvents } from "./experience-events";
 import { experiences } from "./experiences";
 import { organizationMembers } from "./organization-members";
 import { organizations } from "./organizations";
@@ -65,3 +66,19 @@ export const experiencesDeleteMember = pgPolicy("experiences_delete_member", {
   to: authenticatedRole,
   using: isMemberOf(experiences.organizationId),
 }).link(experiences);
+
+// -- experience_events ---------------------------------------------------
+// Read-only for members of the owning organization — events are analytics
+// data, not something members edit by hand. There's deliberately no
+// insert/update/delete policy: rows are only ever written by
+// `trackExperienceEvent` over the server-side Postgres connection (which
+// bypasses RLS), never by a client-facing (anon/authenticated) role. That's
+// what stops a visitor from writing arbitrary events directly.
+export const experienceEventsSelectMember = pgPolicy(
+  "experience_events_select_member",
+  {
+    for: "select",
+    to: authenticatedRole,
+    using: isMemberOf(experienceEvents.organizationId),
+  },
+).link(experienceEvents);

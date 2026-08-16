@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ExperienceEventTracker } from "@/components/experiences/experience-event-tracker";
 import { getExperienceByOrganizationAndSlug } from "@/lib/experiences/queries";
 import { getTemplate } from "@/templates";
 
@@ -38,5 +39,12 @@ export default async function ExperiencePage(
   }
 
   const Component = template.component;
-  return <Component data={result.data} />;
+  return (
+    <ExperienceEventTracker
+      organizationSlug={organizationSlug}
+      experienceSlug={experienceSlug}
+    >
+      <Component data={result.data} />
+    </ExperienceEventTracker>
+  );
 }

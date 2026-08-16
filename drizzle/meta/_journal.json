@@ -29,6 +29,13 @@
       "when": 1786849549708,
       "tag": "0003_add_experiences_org_slug_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786859095229,
+      "tag": "0004_add_experience_events",
+      "breakpoints": true
     }
   ]
 }
