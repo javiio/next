@@ -100,6 +100,13 @@ const timelineFormatters: Record<ExperienceEventType, TimelineFormatter> = {
     const data = eventData as ExperienceEventData["cta_clicked"];
     return { title: "CTA clicked", detail: humanize(data.cta) };
   },
+  name_updated: ({ eventData }) => {
+    const data = eventData as ExperienceEventData["name_updated"];
+    return {
+      title: "Name updated by visitor",
+      detail: `${data.previousName} → ${data.newName}`,
+    };
+  },
 };
 
 function isKnownEventType(

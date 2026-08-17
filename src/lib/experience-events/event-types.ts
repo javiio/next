@@ -12,6 +12,14 @@ export const experienceEventSchemas = {
   cta_clicked: z.object({
     cta: z.string().trim().min(1),
   }),
+  // Fired when a visitor edits an Experience's `name` through a public,
+  // unauthenticated form (see `@/lib/experiences/public-actions`). Purely
+  // for the org's activity timeline — it never gates or drives the write
+  // itself.
+  name_updated: z.object({
+    previousName: z.string().trim().min(1),
+    newName: z.string().trim().min(1),
+  }),
 } satisfies Record<string, z.ZodType>;
 
 export type ExperienceEventType = keyof typeof experienceEventSchemas;

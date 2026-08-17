@@ -52,7 +52,11 @@ export default async function ExperiencePage(
       organizationSlug={organizationSlug}
       experienceSlug={experienceSlug}
     >
-      <Component data={result.data} />
+      <Component
+        data={result.data}
+        organizationSlug={organizationSlug}
+        experienceSlug={experienceSlug}
+      />
       {isAdmin && (
         <ExperienceAdminFab
           experience={{
