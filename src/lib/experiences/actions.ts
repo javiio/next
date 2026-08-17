@@ -12,7 +12,7 @@ import { getExperienceByIdForOrganization } from "./queries";
 import { generateUniqueSlug } from "./slug";
 
 export type ExperienceFormState = {
-  status: "idle" | "error";
+  status: "idle" | "success" | "error";
   message?: string;
   fieldErrors?: Record<string, string[]>;
 };
@@ -167,7 +167,8 @@ export async function updateExperience(
   }
 
   revalidatePath(`/${organization.slug}/experiences`);
-  redirect(`/${organization.slug}/experiences/${existing.id}`);
+  revalidatePath(`/${organization.slug}/e/${slug}`);
+  return { status: "success" };
 }
 
 export type DeleteExperienceResult = {

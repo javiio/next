@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { MoreHorizontalIcon } from "lucide-react";
+import { ExternalLinkIcon, MoreHorizontalIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { deleteExperience } from "@/lib/experiences/actions";
@@ -52,36 +51,40 @@ export function ExperienceRowActions({
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreHorizontalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link href={`/${organizationSlug}/e/${slug}`}>View</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/${organizationSlug}/experiences/${experienceId}`}>
-              Edit
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={(event) => {
-              // Keep the dialog mounted after the dropdown closes.
-              event.preventDefault();
-              setDeleteError(null);
-              setDeleteDialogOpen(true);
-            }}
+      <div className="flex items-center justify-end gap-1">
+        <Button variant="ghost" size="icon" asChild>
+          <Link
+            href={`/${organizationSlug}/e/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <ExternalLinkIcon />
+            <span className="sr-only">Open in new tab</span>
+          </Link>
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontalIcon />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={(event) => {
+                // Keep the dialog mounted after the dropdown closes.
+                event.preventDefault();
+                setDeleteError(null);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

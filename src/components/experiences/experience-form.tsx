@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CircleAlertIcon } from "lucide-react";
@@ -50,12 +50,16 @@ function readStringField(data: unknown, key: string): string | undefined {
 
 export function ExperienceForm({
   experience,
+  onSuccess,
+  onCancel,
 }: {
   experience?: {
     id: string;
     template: string;
     data: unknown;
   };
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }) {
   const { organizationSlug } = useParams<{ organizationSlug: string }>();
   const isEditing = !!experience;
@@ -73,6 +77,14 @@ export function ExperienceForm({
     initialState,
   );
 
+  useEffect(() => {
+    if (state.status === "success") {
+      onSuccess?.();
+    }
+    // Only re-run when a new submission actually succeeds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       {isEditing && (
@@ -83,6 +95,12 @@ export function ExperienceForm({
         <Alert variant="destructive">
           <CircleAlertIcon />
           <AlertTitle>{state.message}</AlertTitle>
+        </Alert>
+      )}
+
+      {state.status === "success" && !onSuccess && (
+        <Alert>
+          <AlertTitle>Saved.</AlertTitle>
         </Alert>
       )}
 
@@ -155,9 +173,15 @@ export function ExperienceForm({
       </FieldGroup>
 
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" asChild>
-          <Link href={`/${organizationSlug}/experiences`}>Cancel</Link>
-        </Button>
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : (
+          <Button type="button" variant="outline" asChild>
+            <Link href={`/${organizationSlug}/experiences`}>Cancel</Link>
+          </Button>
+        )}
         <Button type="submit" disabled={isPending}>
           {isEditing
             ? isPending

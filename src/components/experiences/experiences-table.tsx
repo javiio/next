@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { experiences } from "@/lib/db/schema";
+import { ExperienceEditDrawer } from "@/components/experiences/experience-edit-drawer";
 import { getExperienceDisplayName } from "@/lib/experiences/display";
 import { ExperienceRowActions } from "./experience-row-actions";
 
@@ -38,6 +42,11 @@ export function ExperiencesTable({
   experiences: Experience[];
   organizationSlug: string;
 }) {
+  // Selecting a row opens the edit Drawer in place
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(
+    null,
+  );
+
   if (experiences.length === 0) {
     return (
       <Empty>
@@ -59,50 +68,75 @@ export function ExperiencesTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Template</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Updated</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {experiences.map((experience) => {
-          const displayName = getExperienceDisplayName(
-            experience.data,
-            experience.slug,
-          );
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Template</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Updated</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {experiences.map((experience) => {
+            const displayName = getExperienceDisplayName(
+              experience.data,
+              experience.slug,
+            );
 
-          return (
-            <TableRow key={experience.id}>
-              <TableCell className="font-medium">{displayName}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {experience.template}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={statusBadgeVariant[experience.status] ?? "outline"}
+            return (
+              <TableRow
+                key={experience.id}
+                className="cursor-pointer"
+                onClick={() => setEditingExperience(experience)}
+              >
+                <TableCell className="font-medium">{displayName}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {experience.template}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={statusBadgeVariant[experience.status] ?? "outline"}
+                  >
+                    {experience.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {updatedAtFormatter.format(experience.updatedAt)}
+                </TableCell>
+                <TableCell
+                  className="text-right"
+                  onClick={(event) => event.stopPropagation()}
                 >
-                  {experience.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {updatedAtFormatter.format(experience.updatedAt)}
-              </TableCell>
-              <TableCell className="text-right">
-                <ExperienceRowActions
-                  experienceId={experience.id}
-                  slug={experience.slug}
-                  name={displayName}
-                />
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+                  <ExperienceRowActions
+                    experienceId={experience.id}
+                    slug={experience.slug}
+                    name={displayName}
+                  />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+
+      {editingExperience && (
+        <ExperienceEditDrawer
+          experience={{
+            id: editingExperience.id,
+            template: editingExperience.template,
+            data: editingExperience.data,
+          }}
+          open={!!editingExperience}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingExperience(null);
+            }
+          }}
+        />
+      )}
+    </>
   );
 }

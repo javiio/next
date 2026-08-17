@@ -149,6 +149,24 @@ async function assignFirstOrganization(
   return organization;
 }
 
+// For public routes (e.g. the public Experience page) that want to
+// conditionally show admin-only UI (like an edit affordance) without the
+// login redirect `getOrganizationForCurrentUser` performs — anonymous
+// visitors are a normal case there, not an error. There's no dedicated
+// "admin" role yet (see `organizationMemberRole`), so any membership
+// (`owner` or `member`) qualifies, matching the access every other
+// experiences action already grants org members.
+export async function isCurrentUserOrganizationAdmin(
+  organizationId: string,
+): Promise<boolean> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
+    return false;
+  }
+
+  return isMemberOfOrganization(userId, organizationId);
+}
+
 // The entry point for every organization-scoped URL
 // (`/[organizationSlug]/...`). This is where the "authenticated user →
 // organization membership → organization from URL" check described in the

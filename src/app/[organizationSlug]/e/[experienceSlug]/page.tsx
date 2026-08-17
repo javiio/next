@@ -1,12 +1,16 @@
 import { notFound } from "next/navigation";
+import { ExperienceAdminFab } from "@/components/experiences/experience-admin-fab";
 import { ExperienceEventTracker } from "@/components/experiences/experience-event-tracker";
 import { getExperienceByOrganizationAndSlug } from "@/lib/experiences/queries";
+import { isCurrentUserOrganizationAdmin } from "@/lib/organizations/queries";
 import { getTemplate } from "@/templates";
 
 // Public route — deliberately outside the `experiences/` layout, so it
 // never gets the authenticated dashboard shell and never calls
-// `getOrganizationForCurrentUser` (no auth/membership check here, by
-// design: anyone with the link can view a published Experience).
+// `getOrganizationForCurrentUser` (no auth/membership check gates this
+// page, by design: anyone with the link can view a published Experience).
+// It does optionally check membership below, but only to decide whether to
+// show the admin edit affordance — never to block rendering.
 export default async function ExperiencePage(
   props: PageProps<"/[organizationSlug]/e/[experienceSlug]">,
 ) {
@@ -38,6 +42,10 @@ export default async function ExperiencePage(
     );
   }
 
+  const isAdmin = await isCurrentUserOrganizationAdmin(
+    experience.organizationId,
+  );
+
   const Component = template.component;
   return (
     <ExperienceEventTracker
@@ -45,6 +53,15 @@ export default async function ExperiencePage(
       experienceSlug={experienceSlug}
     >
       <Component data={result.data} />
+      {isAdmin && (
+        <ExperienceAdminFab
+          experience={{
+            id: experience.id,
+            template: experience.template,
+            data: experience.data,
+          }}
+        />
+      )}
     </ExperienceEventTracker>
   );
 }
