@@ -9,11 +9,9 @@ import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,32 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   createExperience,
   updateExperience,
   type ExperienceFormState,
 } from "@/lib/experiences/actions";
-import { listTemplateIds } from "@/templates";
+import { getTemplate, listTemplateIds } from "@/templates";
+import { SchemaForm } from "@/templates/schema-form";
 
 const templateIds = listTemplateIds();
 
 const initialState: ExperienceFormState = { status: "idle" };
-
-function toFieldErrors(messages?: string[]) {
-  return messages?.map((message) => ({ message }));
-}
-
-// The existing Experience's `data` is only used here to pre-fill defaults —
-// it's read loosely per-field below. The template's Zod schema remains the
-// source of truth for actually validating a submission.
-function readStringField(data: unknown, key: string): string | undefined {
-  if (data && typeof data === "object" && key in data) {
-    const value = (data as Record<string, unknown>)[key];
-    return typeof value === "string" ? value : undefined;
-  }
-  return undefined;
-}
 
 export function ExperienceForm({
   experience,
@@ -66,6 +49,8 @@ export function ExperienceForm({
   const [templateId, setTemplateId] = useState(
     experience?.template ?? templateIds[0],
   );
+  const template = getTemplate(templateId);
+  const TemplateForm = template?.form;
   // `.bind` supplies `organizationSlug` as the action's first argument —
   // it's never trusted as-is; both actions still re-resolve and re-check it
   // server-side via `getOrganizationForCurrentUser`.
@@ -131,45 +116,19 @@ export function ExperienceForm({
           </FieldDescription>
         </Field>
 
-        {templateId === "creator/proposal-v1" && (
-          <>
-            <Field data-invalid={!!state.fieldErrors?.name}>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
-              <Input
-                id="name"
-                name="name"
-                defaultValue={readStringField(experience?.data, "name")}
-                aria-invalid={!!state.fieldErrors?.name}
-                required
-              />
-              <FieldError errors={toFieldErrors(state.fieldErrors?.name)} />
-            </Field>
-
-            <Field data-invalid={!!state.fieldErrors?.company}>
-              <FieldLabel htmlFor="company">Company</FieldLabel>
-              <Input
-                id="company"
-                name="company"
-                defaultValue={readStringField(experience?.data, "company")}
-                aria-invalid={!!state.fieldErrors?.company}
-                required
-              />
-              <FieldError errors={toFieldErrors(state.fieldErrors?.company)} />
-            </Field>
-
-            <Field data-invalid={!!state.fieldErrors?.message}>
-              <FieldLabel htmlFor="message">Message</FieldLabel>
-              <Textarea
-                id="message"
-                name="message"
-                defaultValue={readStringField(experience?.data, "message")}
-                aria-invalid={!!state.fieldErrors?.message}
-                required
-              />
-              <FieldError errors={toFieldErrors(state.fieldErrors?.message)} />
-            </Field>
-          </>
-        )}
+        {template &&
+          (TemplateForm ? (
+            <TemplateForm
+              defaultData={experience?.data}
+              fieldErrors={state.fieldErrors}
+            />
+          ) : (
+            <SchemaForm
+              schema={template.schema}
+              defaultData={experience?.data}
+              fieldErrors={state.fieldErrors}
+            />
+          ))}
       </FieldGroup>
 
       <div className="flex justify-end gap-3">

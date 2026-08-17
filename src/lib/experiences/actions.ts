@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { experiences } from "@/lib/db/schema";
 import { getOrganizationForCurrentUser } from "@/lib/organizations/queries";
 import { getTemplate } from "@/templates";
+import { extractSchemaFormData } from "@/templates/schema-form-data";
 import { getExperienceNameForSlug } from "./display";
 import { getExperienceByIdForOrganization } from "./queries";
 import { generateUniqueSlug } from "./slug";
@@ -16,17 +17,6 @@ export type ExperienceFormState = {
   message?: string;
   fieldErrors?: Record<string, string[]>;
 };
-
-// Fields on the form that aren't part of the template's own data.
-const NON_TEMPLATE_FIELDS = new Set(["templateId", "experienceId"]);
-
-function extractTemplateData(formData: FormData) {
-  return Object.fromEntries(
-    Array.from(formData.entries()).filter(
-      ([key]) => !NON_TEMPLATE_FIELDS.has(key),
-    ),
-  );
-}
 
 // `organizationSlug` is supplied via `.bind()` at the call site (see
 // `ExperienceForm`, which reads it from the URL with `useParams()` rather
@@ -58,7 +48,9 @@ export async function createExperience(
 
   // The template's own schema is the single source of truth for validating
   // its data.
-  const parsed = template.schema.safeParse(extractTemplateData(formData));
+  const parsed = template.schema.safeParse(
+    extractSchemaFormData(template.schema, formData),
+  );
   if (!parsed.success) {
     return {
       status: "error",
@@ -133,7 +125,9 @@ export async function updateExperience(
     };
   }
 
-  const parsed = template.schema.safeParse(extractTemplateData(formData));
+  const parsed = template.schema.safeParse(
+    extractSchemaFormData(template.schema, formData),
+  );
   if (!parsed.success) {
     return {
       status: "error",

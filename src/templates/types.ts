@@ -12,6 +12,15 @@ export type TemplateComponentProps<TData> = {
   experienceSlug: string;
 };
 
+// Props for a template's own admin edit-form (see `Template["form"]`
+// below). `defaultData` is the existing Experience's `data` when editing,
+// absent when creating; `fieldErrors` mirrors a failed
+// `schema.safeParse(...)`'s `flatten().fieldErrors`.
+export type TemplateFormProps<TData> = {
+  defaultData?: TData;
+  fieldErrors?: Record<string, string[]>;
+};
+
 // A template pairs a React component with the Zod schema that validates
 // the `data` an Experience must provide to render it. `TData` defaults to
 // `any` so a registry can hold templates with different, unrelated data
@@ -20,6 +29,9 @@ export type TemplateComponentProps<TData> = {
 export type Template<TData = any> = {
   schema: z.ZodType<TData>;
   component: ComponentType<TemplateComponentProps<TData>>;
+  // Optional custom admin edit-form fields for this template — rendered by
+  // `ExperienceForm` instead of the generated SchemaForm
+  form?: ComponentType<TemplateFormProps<TData>>;
 };
 
 // Templates for a single namespace (company), keyed by template id (e.g. "proposal-v1").
